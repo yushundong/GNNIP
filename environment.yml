@@ -27,7 +27,7 @@ dependencies:
       - markupsafe==2.1.5
       - mpmath==1.3.0
       - networkx==3.3
-      - numpy==2.0.1
+      - numpy>=1.23.5,<2.0.0
       - pandas==2.2.2
       - psutil==6.0.0
       - pydantic==2.8.2

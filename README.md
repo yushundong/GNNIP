@@ -1,26 +1,104 @@
+# PyGIP Installation Guide
+
+PyGIP supports multiple CUDA versions and provides two installation methods. Choose the method that best suits your needs.
+
+## Method 1: Direct Installation
+
+Create and activate a new conda environment:
 ```bash
-# pip install
 conda create -n pygip python=3.10.14
 conda activate pygip
-# if you use cuda 11.x
-pip install pygip -f https://data.dgl.ai/wheels/torch-2.3/cu118/repo.html --extra-index-url https://download.pytorch.org/whl/cu118
-# if you use cuda 12.x
-# pip install pygip -f https://data.dgl.ai/wheels/torch-2.3/cu121/repo.html --extra-index-url https://data.dgl.ai/wheels/torch-2.3/cu121/repo.html
 ```
 
+### Choose your CUDA version:
 
+#### For CUDA 11.x users:
 ```bash
-# Simple setup.
+pip install pygip -f https://data.dgl.ai/wheels/torch-2.3/cu118/repo.html --extra-index-url https://download.pytorch.org/whl/cu118
+```
+
+#### For CUDA 12.x users:
+```bash
+pip install pygip -f https://data.dgl.ai/wheels/torch-2.3/cu121/repo.html --extra-index-url https://data.dgl.ai/wheels/torch-2.3/cu121/repo.html
+```
+
+## Method 2: Environment Setup 
+
+This method uses a predefined environment.yml file and is recommended for development:
+
+1. Create and activate the environment:
+```bash
 conda env create -f environment.yml -n pygip
 conda activate pygip
-pip install dgl -f https://data.dgl.ai/wheels/repo.html #due to dgl issues, unfortunately we have to install this dgl 2.2.1 manually.
+```
 
-# Under the GNNIP directory
+2. Install DGL manually (required due to DGL 2.2.1 dependency issues):
+```bash
+pip install dgl -f https://data.dgl.ai/wheels/repo.html
+```
+
+3. Set up the Python path (run this from the PyGIP root directory):
+```bash
+# Linux/Mac:
 export PYTHONPATH=`pwd`
 
-# Quick testing
-python3 examples/examples.py
+# Windows:
+set PYTHONPATH=%cd%
 ```
+
+4. Test the installation:
+```bash
+python examples/examples.py
+```
+
+## Verifying CUDA Setup
+
+To verify your CUDA installation is working correctly:
+```python
+import torch
+print("CUDA Available:", torch.cuda.is_available())
+print("CUDA Version:", torch.version.cuda)
+print("GPU Device:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU found")
+```
+
+## Troubleshooting
+
+If you encounter CUDA-related issues:
+
+1. Ensure your NVIDIA drivers are up to date:
+```bash
+nvidia-smi
+```
+
+2. If you need to reinstall PyTorch with a specific CUDA version:
+```bash
+# Remove existing torch installation
+pip uninstall torch torch-geometric -y
+
+# For CUDA 11.x:
+pip install torch --index-url https://download.pytorch.org/whl/cu118
+pip install torch-geometric==2.5.0
+
+# For CUDA 12.x:
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+pip install torch-geometric==2.5.0
+```
+
+3. Verify DGL installation:
+```bash
+python -c "import dgl; print(dgl.__version__)"
+```
+
+## Requirements
+
+PyGIP has been tested with the following core dependencies:
+- Python 3.10.14
+- PyTorch 2.3.0
+- torch-geometric 2.5.0
+- DGL 2.2.1
+
+For a complete list of dependencies, see the `requirements.txt` file in the repository.y
+
 
 # Attack
 
