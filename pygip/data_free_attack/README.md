@@ -4,7 +4,7 @@ This directory contains an implementation of data-free model extraction attacks 
 
 ## Files
 
-1. `example.py`: Example script demonstrating how to run data-free attacks
+1. `example.py`: Interactive script demonstrating how to run data-free attacks
 2. `models/`:
    - `generator.py`: Graph generator implementation
    - `victim.py`: Victim model implementations
@@ -15,48 +15,36 @@ This directory contains an implementation of data-free model extraction attacks 
 
 ## Running Data-free Attacks
 
-The `example.py` script provides a complete example of how to run data-free attacks on GNN models. Here's how to use it:
+The `example.py` script provides an interactive way to run data-free attacks on GNN models. Here's how to use it:
 
 ```bash
 python example.py
 ```
 
-### Example Script Structure
+When you run the script, it will:
+1. Load the Cora dataset
+2. Create and train a victim model
+3. Prompt you to choose an attack type:
+   ```
+   Choose attack type (1, 2, or 3): 
+   ```
+4. Run the selected attack with the following default parameters:
+   ```python
+   noise_dim = 32
+   num_nodes = 500
+   num_queries = 300
+   generator_lr = 1e-6
+   surrogate_lr = 0.001
+   n_generator_steps = 2
+   n_surrogate_steps = 5
+   ```
 
-The example script demonstrates:
-1. Loading a dataset (Cora in this example)
-2. Creating and training a victim model
-3. Setting up attack parameters
-4. Running a Type I attack
+### Attack Types
 
-### Customizing Attack Parameters
+1. Type I Attack: Basic model extraction attack
+2. Type II Attack: Enhanced extraction with improved query strategy
+3. Type III Attack: Advanced extraction with additional model architecture considerations
 
-The example shows the following default parameters which can be modified:
-```python
-# Attack parameters
-noise_dim = 32
-num_nodes = 500
-num_queries = 300
-generator_lr = 1e-6
-surrogate_lr = 0.001
-n_generator_steps = 2
-n_surrogate_steps = 5
-```
+Choose the attack type by entering the corresponding number (1, 2, or 3) when prompted.
 
-### Running Different Attack Types
-
-The example includes code for all three attack types. To run different attacks, simply uncomment the desired attack in the `attacks` list:
-
-```python
-attacks = [
-    ("Type I", TypeIAttack(generator, surrogate_model, victim_model, device, 
-                           noise_dim, num_nodes, feature_dim, generator_lr, surrogate_lr,
-                           n_generator_steps, n_surrogate_steps)),
-    # Uncomment to run Type II attack
-    # ("Type II", TypeIIAttack(...)),
-    # Uncomment to run Type III attack
-    # ("Type III", TypeIIIAttack(...))
-]
-```
-
-The example script provides a template that can be easily modified to run attacks with different parameters or on different models. See the commented code in the script for Type II and Type III attack implementations.
+The script will display the progress of the victim model training and the final accuracy of both the victim and surrogate models.
