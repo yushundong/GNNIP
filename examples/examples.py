@@ -1,10 +1,10 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from pygip.datasets.datasets import *
 from pygip.protect import *
-from pygip.protect.Defense import Watermark_sage
-
+from pygip.protect.defense import Watermark_sage
 
 # dataset = Cora()
 # dataset = Citeseer()
@@ -135,3 +135,4 @@ def test():
         elif (dataset_name == 3):
             defense = Watermark_sage(PubMed(), 0.25)
             defense.watermark_attack(PubMed(), attack_name, dataset_name)
+test()
