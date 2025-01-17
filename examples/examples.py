@@ -135,3 +135,6 @@ def test():
         elif (dataset_name == 3):
             defense = Watermark_sage(PubMed(), 0.25)
             defense.watermark_attack(PubMed(), attack_name, dataset_name)
+
+
+test()

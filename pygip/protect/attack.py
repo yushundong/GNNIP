@@ -372,34 +372,170 @@ class ModelExtractionAttack0(ModelExtractionAttack):
         print(best_performance_metrics)
 
 
-class ModelExtractionAttack1(ModelExtractionAttack):
+# class ModelExtractionAttack1(ModelExtractionAttack):
 
-    def __init__(self, dataset, attack_node_fraction, selected_node_file, query_label_file, shadow_graph_file=None):
+#     def __init__(self, dataset, attack_node_fraction, selected_node_file, query_label_file, shadow_graph_file=None):
+#         super().__init__(dataset, attack_node_fraction)
+#         self.attack_node_number = 700
+#         self.selected_node_file = selected_node_file
+#         self.query_label_file = query_label_file
+#         self.shadow_graph_file = shadow_graph_file
+
+#     def attack(self):
+
+#         # read the selected node file
+#         selected_node_file = open(self.selected_node_file, "r")
+#         lines1 = selected_node_file.readlines()
+#         attack_nodes = []
+#         for line_1 in lines1:
+#             attack_nodes.append(int(line_1))
+#         selected_node_file.close()
+
+#         # find the testing node
+#         testing_nodes = []
+#         for i in range(self.node_number):
+#             if i not in attack_nodes:
+#                 testing_nodes.append(i)
+
+#         attack_features = self.features[attack_nodes]
+
+#         # mark the test/train split.
+#         for i in range(self.node_number):
+#             if i in attack_nodes:
+#                 self.test_mask[i] = 0
+#                 self.train_mask[i] = 1
+#             else:
+#                 self.test_mask[i] = 1
+#                 self.train_mask[i] = 0
+
+#         sub_test_mask = self.test_mask
+
+#         # get their labels
+#         query_label_file = open(self.query_label_file, "r")
+#         lines2 = query_label_file.readlines()
+#         all_query_labels = []
+#         attack_query = []
+#         for line_2 in lines2:
+#             all_query_labels.append(int(line_2.split()[1]))
+#             if int(line_2.split()[0]) in attack_nodes:
+#                 attack_query.append(int(line_2.split()[1]))
+#         query_label_file.close()
+
+#         attack_query = torch.LongTensor(attack_query)
+#         all_query_labels = torch.LongTensor(all_query_labels)
+
+#         # build shadow graph
+#         shadow_graph_file = open(self.shadow_graph_file, "r")
+#         lines3 = shadow_graph_file.readlines()
+#         adj_matrix = np.zeros(
+#             (self.attack_node_number, self.attack_node_number))
+#         for line_3 in lines3:
+#             list_line = line_3.split()
+#             adj_matrix[int(list_line[0])][int(list_line[1])] = 1
+#             adj_matrix[int(list_line[1])][int(list_line[0])] = 1
+#         shadow_graph_file.close()
+
+#         g_shadow = np.asmatrix(adj_matrix)
+#         sub_g = nx.from_numpy_array(g_shadow)
+
+#         # add self loop
+#         sub_g.remove_edges_from(nx.selfloop_edges(sub_g))
+#         sub_g.add_edges_from(zip(sub_g.nodes(), sub_g.nodes()))
+#         sub_g = DGLGraph(sub_g)
+#         n_edges = sub_g.number_of_edges()
+
+#         # normalization
+#         degs = sub_g.in_degrees().float()
+#         norm = torch.pow(degs, -0.5)
+#         norm[torch.isinf(norm)] = 0
+#         sub_g.ndata['norm'] = norm.unsqueeze(1)
+
+#         # build GCN
+
+#         # todo check this
+#         # g = DGLGraph(data.graph)
+#         # g_numpy = nx.to_numpy_array(data.graph)
+#         sub_g_b = nx.from_numpy_array(
+#             np.asmatrix(self.graph.adjacency_matrix().to_dense()))
+
+#         # graph preprocess and calculate normalization factor
+#         # sub_g_b = nx.from_numpy_array(sub_g_b)
+#         # add self loop
+
+#         sub_g_b.remove_edges_from(nx.selfloop_edges(sub_g_b))
+#         sub_g_b.add_edges_from(zip(sub_g_b.nodes(), sub_g_b.nodes()))
+
+#         sub_g_b = DGLGraph(sub_g_b)
+#         n_edges = sub_g_b.number_of_edges()
+#         # normalization
+#         degs = sub_g_b.in_degrees().float()
+#         norm = torch.pow(degs, -0.5)
+#         norm[torch.isinf(norm)] = 0
+
+#         sub_g_b.ndata['norm'] = norm.unsqueeze(1)
+
+#         # Train the DNN
+#         net = Net_shadow(self.feature_number, self.label_number)
+#         print(net)
+
+#         #
+#         optimizer = torch.optim.Adam(
+#             net.parameters(), lr=1e-2, weight_decay=5e-4)
+
+#         dur = []
+
+#         best_performance_metrics = GraphNeuralNetworkMetric()
+
+#         print("===================Model Extracting================================")
+
+#         for epoch in tqdm(range(200)):
+#             if epoch >= 3:
+#                 t0 = time.time()
+
+#             net.train()
+#             logits = net(sub_g, attack_features)
+#             logp = torch.nn.functional.log_softmax(logits, dim=1)
+#             loss = torch.nn.functional.nll_loss(logp, attack_query)
+
+#             # weights = [1/num_0, 1/num_1, 1/num_2, 1/num_3, 1/num_4, 1/num_5, 1/num_6]
+#             # class_weights = th.FloatTensor(weights)
+#         # =============================================================================
+#         #     criterion = torch.nn.CrossEntropyLoss()
+#         #     loss = criterion(logp, attack_query)
+#         # =============================================================================
+
+#             optimizer.zero_grad()
+#             loss.backward()
+#             optimizer.step()
+
+#             if epoch >= 3:
+#                 dur.append(time.time() - t0)
+
+#             focus_gnn_metrics = GraphNeuralNetworkMetric(
+#                 0, 0, net, sub_g_b, self.features, self.test_mask, all_query_labels, self.labels)
+#             focus_gnn_metrics.evaluate()
+
+#             best_performance_metrics.fidelity = max(
+#                 best_performance_metrics.fidelity, focus_gnn_metrics.fidelity)
+#             best_performance_metrics.accuracy = max(
+#                 best_performance_metrics.accuracy, focus_gnn_metrics.accuracy)
+
+#         print(best_performance_metrics)
+
+class ModelExtractionAttack1(ModelExtractionAttack):
+    def __init__(self, dataset, attack_node_fraction, selected_nodes, query_labels, shadow_graph):
         super().__init__(dataset, attack_node_fraction)
         self.attack_node_number = 700
-        self.selected_node_file = selected_node_file
-        self.query_label_file = query_label_file
-        self.shadow_graph_file = shadow_graph_file
+        self.selected_nodes = selected_nodes
+        self.query_labels = query_labels
+        self.shadow_graph = shadow_graph
 
     def attack(self):
-
-        # read the selected node file
-        selected_node_file = open(self.selected_node_file, "r")
-        lines1 = selected_node_file.readlines()
-        attack_nodes = []
-        for line_1 in lines1:
-            attack_nodes.append(int(line_1))
-        selected_node_file.close()
-
-        # find the testing node
-        testing_nodes = []
-        for i in range(self.node_number):
-            if i not in attack_nodes:
-                testing_nodes.append(i)
-
+        attack_nodes = self.selected_nodes
+        testing_nodes = [i for i in range(self.node_number) if i not in attack_nodes]
         attack_features = self.features[attack_nodes]
 
-        # mark the test/train split.
+        # mark the test/train split
         for i in range(self.node_number):
             if i in attack_nodes:
                 self.test_mask[i] = 0
@@ -409,117 +545,48 @@ class ModelExtractionAttack1(ModelExtractionAttack):
                 self.train_mask[i] = 0
 
         sub_test_mask = self.test_mask
-
-        # get their labels
-        query_label_file = open(self.query_label_file, "r")
-        lines2 = query_label_file.readlines()
-        all_query_labels = []
-        attack_query = []
-        for line_2 in lines2:
-            all_query_labels.append(int(line_2.split()[1]))
-            if int(line_2.split()[0]) in attack_nodes:
-                attack_query.append(int(line_2.split()[1]))
-        query_label_file.close()
-
-        attack_query = torch.LongTensor(attack_query)
-        all_query_labels = torch.LongTensor(all_query_labels)
+        attack_query = torch.LongTensor([self.query_labels[node] for node in attack_nodes])
+        all_query_labels = torch.LongTensor(self.query_labels)
 
         # build shadow graph
-        shadow_graph_file = open(self.shadow_graph_file, "r")
-        lines3 = shadow_graph_file.readlines()
-        adj_matrix = np.zeros(
-            (self.attack_node_number, self.attack_node_number))
-        for line_3 in lines3:
-            list_line = line_3.split()
-            adj_matrix[int(list_line[0])][int(list_line[1])] = 1
-            adj_matrix[int(list_line[1])][int(list_line[0])] = 1
-        shadow_graph_file.close()
+        adj_matrix = np.zeros((self.attack_node_number, self.attack_node_number))
+        for edge in self.shadow_graph:
+            adj_matrix[edge[0]][edge[1]] = 1
+            adj_matrix[edge[1]][edge[0]] = 1
 
         g_shadow = np.asmatrix(adj_matrix)
         sub_g = nx.from_numpy_array(g_shadow)
-
-        # add self loop
         sub_g.remove_edges_from(nx.selfloop_edges(sub_g))
         sub_g.add_edges_from(zip(sub_g.nodes(), sub_g.nodes()))
         sub_g = DGLGraph(sub_g)
         n_edges = sub_g.number_of_edges()
-
-        # normalization
         degs = sub_g.in_degrees().float()
         norm = torch.pow(degs, -0.5)
         norm[torch.isinf(norm)] = 0
         sub_g.ndata['norm'] = norm.unsqueeze(1)
 
-        # build GCN
-
-        # todo check this
-        # g = DGLGraph(data.graph)
-        # g_numpy = nx.to_numpy_array(data.graph)
-        sub_g_b = nx.from_numpy_array(
-            np.asmatrix(self.graph.adjacency_matrix().to_dense()))
-
-        # graph preprocess and calculate normalization factor
-        # sub_g_b = nx.from_numpy_array(sub_g_b)
-        # add self loop
-
-        sub_g_b.remove_edges_from(nx.selfloop_edges(sub_g_b))
-        sub_g_b.add_edges_from(zip(sub_g_b.nodes(), sub_g_b.nodes()))
-
-        sub_g_b = DGLGraph(sub_g_b)
-        n_edges = sub_g_b.number_of_edges()
-        # normalization
-        degs = sub_g_b.in_degrees().float()
-        norm = torch.pow(degs, -0.5)
-        norm[torch.isinf(norm)] = 0
-
-        sub_g_b.ndata['norm'] = norm.unsqueeze(1)
-
         # Train the DNN
         net = Net_shadow(self.feature_number, self.label_number)
-        print(net)
-
-        #
-        optimizer = torch.optim.Adam(
-            net.parameters(), lr=1e-2, weight_decay=5e-4)
-
+        optimizer = torch.optim.Adam(net.parameters(), lr=1e-2, weight_decay=5e-4)
         dur = []
-
         best_performance_metrics = GraphNeuralNetworkMetric()
-
-        print("===================Model Extracting================================")
 
         for epoch in tqdm(range(200)):
             if epoch >= 3:
                 t0 = time.time()
-
             net.train()
             logits = net(sub_g, attack_features)
             logp = torch.nn.functional.log_softmax(logits, dim=1)
             loss = torch.nn.functional.nll_loss(logp, attack_query)
-
-            # weights = [1/num_0, 1/num_1, 1/num_2, 1/num_3, 1/num_4, 1/num_5, 1/num_6]
-            # class_weights = th.FloatTensor(weights)
-        # =============================================================================
-        #     criterion = torch.nn.CrossEntropyLoss()
-        #     loss = criterion(logp, attack_query)
-        # =============================================================================
-
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
             if epoch >= 3:
                 dur.append(time.time() - t0)
-
-            focus_gnn_metrics = GraphNeuralNetworkMetric(
-                0, 0, net, sub_g_b, self.features, self.test_mask, all_query_labels, self.labels)
+            focus_gnn_metrics = GraphNeuralNetworkMetric(0, 0, net, sub_g_b, self.features, self.test_mask, all_query_labels, self.labels)
             focus_gnn_metrics.evaluate()
-
-            best_performance_metrics.fidelity = max(
-                best_performance_metrics.fidelity, focus_gnn_metrics.fidelity)
-            best_performance_metrics.accuracy = max(
-                best_performance_metrics.accuracy, focus_gnn_metrics.accuracy)
-
+            best_performance_metrics.fidelity = max(best_performance_metrics.fidelity, focus_gnn_metrics.fidelity)
+            best_performance_metrics.accuracy = max(best_performance_metrics.accuracy, focus_gnn_metrics.accuracy)
         print(best_performance_metrics)
 
 
